@@ -1,227 +1,175 @@
-// import './App.css';
-import * as Tone from 'tone'
+import React, { useState, useEffect } from 'react';
+import * as Tone from 'tone';
+import './App.css';
+import base from './instruments/Base.jsx';
+import wurli from './instruments/Wurli.jsx';
 
-let cordBase = "C";
+function createScale(selectedKey, scaleType) {
+  const scaleIntervals = {
+    major: [2, 4, 5, 7, 9, 11],
+    minor: [2, 3, 5, 7, 8, 10],
+  };
 
+  const diatonicNotes = ["C", "D", "E", "F", "G", "A", "B"];
 
-function playSynth(note, selectValue,event) {
-  if (event) {
-    event.target.classList.add('clicked')
+  const scale = [];
+  let currentIndex = diatonicNotes.indexOf(selectedKey);
+
+  for (const interval of scaleIntervals[scaleType]) {
+    scale.push(diatonicNotes[currentIndex % 7]);
+    currentIndex += interval;
   }
-  const sampler = new Tone.Sampler({
-    urls: {
-      A1: "A1.wav",
-      A2: "A2.wav",
-      A3: "A3.wav",
-      "Bb1": "As1.wav",
-      "Bb2": "As2.wav",
-      "Bb3": "As3.wav",
-      B1: "B1.wav",
-      B2: "B2.wav",
-      B3: "B3.wav",
-      C1: "C1.wav",
-      C2: "C2.wav",
-      C3: "C3.wav",
-      C4: "C4.wav",
-      "C#1": "Cs1.wav",
-      "C#2": "Cs2.wav",
-      "C#3": "Cs3.wav",
-      "C#4": "Cs4.wav",
-      D1: "D1.wav",
-      D2: "D2.wav",
-      D3: "D3.wav",
-      D4: "D4.wav",
-      "Eb1": "Ds1.wav",
-      "Eb2": "Ds2.wav",
-      "Eb3": "Ds3.wav",
-      "Eb4": "Ds4.wav",
-      E1: "E1.wav",
-      E2: "E2.wav",
-      E3: "E3.wav",
-      E4: "E4.wav",
-      F1: "F1.wav",
-      F2: "F2.wav",
-      F3: "F3.wav",
-      F4: "F4.wav",
-      "F#1": "Fs1.wav",
-      "F#2": "Fs2.wav",
-      "F#3": "Fs3.wav",
-      G1: "G1.wav",
-      G2: "G2.wav",
-      G3: "G3.wav",
-      "Ab1": "Gs1.wav",
-      "Ab2": "Gs2.wav",
-      "Ab3": "Gs3.wav",
-    },
-    baseUrl: "https://printerscanner.github.io/audio/wurli/",
-    onload: () => {
-      if (selectValue === "simple") {
-        sampler.triggerAttackRelease(note, 5);
-      } else {
-      sampler.triggerAttackRelease(createCord(note), 1);
-      }
-    }
-  }).toDestination();
-  return cordBase = note;
+
+  return scale;
 }
 
-function playSimpleSynth() {
-  const sampler = new Tone.Sampler({
-    urls: {
-      A1: "A1.wav",
-      "Bb1": "As1.wav",
-      B1: "B1.wav",
-      C1: "C1.wav",
-      "C#1": "Cs1.wav",
-      D1: "D1.wav",
-      "Eb1": "Ds1.wav",
-      E1: "E1.wav",
-      F1: "F1.wav",
-      "F#1": "Fs1.wav",
-      G1: "G1.wav",
-      "Ab1": "Gs1.wav",
-    },
-    baseUrl: "https://printerscanner.github.io/audio/heavy_base/",
-    onload: () => {
-      //play a note every sixteenth-note
-      // new Tone.Loop(time => {
-      //   sampler.triggerAttackRelease(cordBase + "1", "8n", time);
-      // }, "4n").start(0);
-      // Tone.Transport.toggle()
-      sampler.triggerAttackRelease(cordBase + "1", "8n");
-    }
-  }).toDestination();
-}
+function createChord(baseNote, scaleType, addSeventh, addNinth, scale) {
+  const intervals = scaleType === "major" ? [0, 2, 4] : [0, 2, 3]; // Default intervals for major and minor chords
+  if (addSeventh) intervals.push(5); // Add seventh (default to major seventh)
+  if (addNinth) intervals.push(7); // Add ninth
 
-function createCord(cord) {
-  let generatedCord = [];
-  const scale = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
-  let minorThird, majorFifth, ninth;
+  const generatedChord = [];
+
   for (let index = 0; index < scale.length; index++) {
-    if (scale[index] === cord) {
-      if (!scale[index + 3]) {
-        minorThird = scale[index - 9]
-      } else {
-        minorThird = scale[index + 3]
+    if (scale[index] === baseNote) {
+      for (const interval of intervals) {
+        const noteIndex = (index + interval) % scale.length;
+        const note = scale[noteIndex];
+        if (note) {
+          generatedChord.push(note + (interval === 0 ? '1' : interval === 2 ? '3' : interval === 5 ? '7' : '9'));
+        }
       }
-      if (!scale[index + 7]) {
-        majorFifth = scale[index - 5]
-      } else {
-        majorFifth = scale[index + 7]
-      }
-      if (!scale[index + 2]) {
-        ninth = scale[index - 10]
-      } else {
-        ninth = scale[index + 2]
-      }
-      generatedCord.push(scale[index] + '3');
-      generatedCord.push(minorThird + '3');
-      generatedCord.push(majorFifth + '3');
-      generatedCord.push(ninth + '3');
+      break;
     }
   }
-  return generatedCord;
+
+  return generatedChord;av
 }
-
-function arpeggiator(cordBase) {
-  let createdCord = createCord(cordBase);
-  console.log(createdCord)
-
-  const sampler = new Tone.Sampler({
-    urls: {
-      A1: "A1.wav",
-      A2: "A2.wav",
-      A3: "A3.wav",
-      "Bb1": "As1.wav",
-      "Bb2": "As2.wav",
-      "Bb3": "As3.wav",
-      B1: "B1.wav",
-      B2: "B2.wav",
-      B3: "B3.wav",
-      C1: "C1.wav",
-      C2: "C2.wav",
-      C3: "C3.wav",
-      C4: "C4.wav",
-      "C#1": "Cs1.wav",
-      "C#2": "Cs2.wav",
-      "C#3": "Cs3.wav",
-      "C#4": "Cs4.wav",
-      D1: "D1.wav",
-      D2: "D2.wav",
-      D3: "D3.wav",
-      D4: "D4.wav",
-      "Eb1": "Ds1.wav",
-      "Eb2": "Ds2.wav",
-      "Eb3": "Ds3.wav",
-      "Eb4": "Ds4.wav",
-      E1: "E1.wav",
-      E2: "E2.wav",
-      E3: "E3.wav",
-      E4: "E4.wav",
-      F1: "F1.wav",
-      F2: "F2.wav",
-      F3: "F3.wav",
-      F4: "F4.wav",
-      "F#1": "Fs1.wav",
-      "F#2": "Fs2.wav",
-      "F#3": "Fs3.wav",
-      G1: "G1.wav",
-      G2: "G2.wav",
-      G3: "G3.wav",
-      "Ab1": "Gs1.wav",
-      "Ab2": "Gs2.wav",
-      "Ab3": "Gs3.wav",
-    },
-    baseUrl: "https://printerscanner.github.io/audio/wurli/",
-    onload: () => {
-      const seq = new Tone.Sequence((time, note) => {
-        sampler.triggerAttackRelease(note, "8n", time);
-        // subdivisions are given as subarrays
-      }, createdCord).start(0);
-      Tone.Transport.start();
-    }
-  }).toDestination();
-}
-
-document.addEventListener("keydown",  (e) => {
-  const dataKeys = document.querySelectorAll('[data-key]');
-
-  dataKeys.forEach(element => {
-    if (element.dataset.key === e.code) {
-      element.click();
-      element.addEventListener("animationend", function() {
-        element.classList.remove("clicked");
-    });
-    } 
-  });  
-})
-
 
 function App() {
+  const [scaleType, setScaleType] = useState('major');
+  const [selectedKey, setSelectedKey] = useState('C'); // Default key is 'C'
+  const [addSeventh, setAddSeventh] = useState(false);
+  const [addNinth, setAddNinth] = useState(false);
+  const [playBassEveryNote, setPlayBassEveryNote] = useState(false); // State to control bass note playing
+  // const [arpeggioType, setArpeggioType] = useState('off'); // State to control arpeggio
+  const [scale, setScale] = useState(createScale(selectedKey, scaleType));
+
+  useEffect(() => {
+    setScale(createScale(selectedKey, scaleType));
+  }, [selectedKey, scaleType]);
+
+  const handleChangeScale = (event) => {
+    setScaleType(event.target.value);
+  };
+
+  const handleChangeKey = (event) => {
+    setSelectedKey(event.target.value);
+  };
+
+  const handleChangeSeventh = (event) => {
+    setAddSeventh(event.target.checked);
+  };
+
+  const handleChangeNinth = (event) => {
+    setAddNinth(event.target.checked);
+  };
+
+  const handleChangePlayBassEveryNote = (event) => {
+    setPlayBassEveryNote(event.target.checked);
+  };
+
+  /* const handleChangeArpeggio = (event) => {
+    setArpeggioType(event.target.value);
+  }; */
+
+  const playBase = () => {
+    wurli.triggerAttackRelease(selectedKey + "1", "4n");
+    if (playBassEveryNote) {
+      playBassNote(selectedKey);
+    }
+  };
+
+  const playWurli = (note, event) => {
+    if (event) {
+      event.target.classList.add('clicked');
+    }
+    wurli.triggerAttackRelease(createChord(note, scaleType, addSeventh, addNinth, scale), 1);
+    if (playBassEveryNote) {
+      playBassNote(note);
+    }
+  };
+
+  const playBassNote = (bassNote) => {
+    wurli.triggerAttackRelease(bassNote + "1", "4n");
+    wurli.triggerAttackRelease(scale[(scale.indexOf(bassNote) + 2) % scale.length] + "0", "8n"); // Play bass note a whole step above
+  };
+
+  /* document.addEventListener("keydown", (e) => {
+    const dataKeys = document.querySelectorAll('[data-key]');
+
+    dataKeys.forEach(element => {
+      if (element.dataset.key === e.code) {
+        element.click();
+        element.addEventListener("animationend", function () {
+          element.classList.remove("clicked");
+        a});
+      }
+    });
+  }); */
+
   return (
     <div className="App">
-      <button onClick={() => {arpeggiator(cordBase)}}>Arpeggiator</button>
-      <div className="synth">
-        <button className="button--small" data-key="KeyB" onClick={playSimpleSynth}><span className="button--small-inner"></span></button>
-        <button className="button--circle" data-key="KeyV" onClick={playSimpleSynth}></button>
+      <div>
+        <label htmlFor="scaleSelect">Select Scale: </label>
+        <select id="scaleSelect" value={scaleType} onChange={handleChangeScale}>
+          <option value="major">Major</option>
+          <option value="minor">Minor</option>
+          {/* Add more scale types here */}
+        </select>
       </div>
-
-      <div className="synth">
-        <button className="button--square" data-key="KeyA" onClick={(event) => {playSynth("C",'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square button--black" data-key="KeyS" onClick={(event) => {playSynth("C#", 'poly',event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square" data-key="KeyD" onClick={(event) => {playSynth("D", 'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square button--black" data-key="KeyF" onClick={(event) => {playSynth("Eb", 'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square" data-key="KeyG" onClick={(event) => {playSynth("E", 'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square" data-key="KeyH" onClick={(event) => {playSynth("F", 'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square button--black" data-key="KeyJ" onClick={(event) => {playSynth("F#", 'poly',event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square" data-key="KeyK" onClick={(event) => {playSynth("G", 'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square button--black" data-key="KeyL" onClick={(event) => {playSynth("Ab", 'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square" data-key="Semicolon" onClick={(event) => {playSynth("A", 'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square button--black" data-key="Quote" onClick={(event) => {playSynth("Bb", 'poly', event)}}><span className="button--square-inner"></span></button>
-        <button className="button--square" data-key="Backslash" onClick={(event) => {playSynth("B", 'poly', event)}}><span className="button--square-inner"></span></button>
-
+      <div>
+        <label htmlFor="keySelect">Select Key: </label>
+        <select id="keySelect" value={selectedKey} onChange={handleChangeKey}>
+          {scale.map((note) => (
+            <option key={note} value={note}>
+              {note}
+            </option>
+          ))}
+        </select>
       </div>
-
+      <div>
+        <label>
+          Add Seventh:
+          <input type="checkbox" checked={addSeventh} onChange={handleChangeSeventh} />
+        </label>
+        <label>
+          Add Ninth:
+          <input type="checkbox" checked={addNinth} onChange={handleChangeNinth} />
+        </label>
+      </div>
+      <div>
+        <label>
+          Play Bass with Every Note:
+          <input type="checkbox" checked={playBassEveryNote} onChange={handleChangePlayBassEveryNote} />
+        </label>
+      </div>
+      <div className="synth">
+        {scale.map((note, index) => (
+          <button
+            key={note}
+            className={`piano-key${note.includes('#') ? ' black-key' : ' white-key'}`}
+            data-key={`Key${note}`}
+            onClick={(event) => playWurli(note, event)}
+          >
+            {note}
+          </button>
+        ))}
+      </div>
+      <div className="bass-buttons">
+        <button onClick={() => playBase()}>Play Bass</button>
+        <button onClick={() => playBase(scale[(scale.indexOf(selectedKey) + 2) % scale.length])}>Play Bass (Whole Step Up)</button>
+      </div>
     </div>
   );
 }
