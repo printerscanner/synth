@@ -1,32 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import * as Tone from 'tone';
 import './App.css';
-import base from './instruments/Base.jsx';
 import wurli from './instruments/Wurli.jsx';
+
+const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G","G#", "A", "A#", "B"];
+
+
+function rotateArrayToPosition(arr, selectedItem) {
+  const index = arr.indexOf(selectedItem);
+
+  if (index === -1) {
+    // Item not found in the array
+    return arr;
+  }
+
+  if (index === 0) {
+    // Item not found in the array
+    return arr;
+  }
+
+  const firstPart = arr.slice(0, index);
+  const secondPart = arr.slice(index);
+  const rotatedArray = secondPart.concat(firstPart);
+  return rotatedArray;
+}
 
 function createScale(selectedKey, scaleType) {
   const scaleIntervals = {
-    major: [2, 4, 5, 7, 9, 11],
-    minor: [2, 3, 5, 7, 8, 10],
+    major: [0, 2, 4, 5, 7, 9, 11],
+    minor: [0, 2, 3, 5, 7, 9, 10],
   };
 
-  const diatonicNotes = ["C", "D", "E", "F", "G", "A", "B"];
-
   const scale = [];
-  let currentIndex = diatonicNotes.indexOf(selectedKey);
-
+  const rotatedArray = rotateArrayToPosition(notes, selectedKey);
+  console.log(rotatedArray)
   for (const interval of scaleIntervals[scaleType]) {
-    scale.push(diatonicNotes[currentIndex % 7]);
-    currentIndex += interval;
+    scale.push(rotatedArray[interval]);
   }
-
+  console.log(scale)
   return scale;
 }
 
 function createChord(baseNote, scaleType, addSeventh, addNinth, scale) {
-  const intervals = scaleType === "major" ? [0, 2, 4] : [0, 2, 3]; // Default intervals for major and minor chords
-  if (addSeventh) intervals.push(5); // Add seventh (default to major seventh)
-  if (addNinth) intervals.push(7); // Add ninth
+  const intervals = [0, 2, 4]; // Default intervals for major and minor chords
+  if (addSeventh) intervals.push(6); // Add seventh (default to major seventh)
+  if (addNinth) intervals.push(1); // Add ninth
 
   const generatedChord = [];
 
@@ -36,14 +54,15 @@ function createChord(baseNote, scaleType, addSeventh, addNinth, scale) {
         const noteIndex = (index + interval) % scale.length;
         const note = scale[noteIndex];
         if (note) {
-          generatedChord.push(note + (interval === 0 ? '1' : interval === 2 ? '3' : interval === 5 ? '7' : '9'));
+          generatedChord.push(note + (interval === 0 ? '3' : interval === 2 ? '3' : interval === 6 ? '3' : interval === 1 ? '4' : '2'));
         }
       }
       break;
     }
   }
+  console.log(generatedChord)
 
-  return generatedChord;av
+  return generatedChord;
 }
 
 function App() {
@@ -52,7 +71,6 @@ function App() {
   const [addSeventh, setAddSeventh] = useState(false);
   const [addNinth, setAddNinth] = useState(false);
   const [playBassEveryNote, setPlayBassEveryNote] = useState(false); // State to control bass note playing
-  // const [arpeggioType, setArpeggioType] = useState('off'); // State to control arpeggio
   const [scale, setScale] = useState(createScale(selectedKey, scaleType));
 
   useEffect(() => {
@@ -79,10 +97,6 @@ function App() {
     setPlayBassEveryNote(event.target.checked);
   };
 
-  /* const handleChangeArpeggio = (event) => {
-    setArpeggioType(event.target.value);
-  }; */
-
   const playBase = () => {
     wurli.triggerAttackRelease(selectedKey + "1", "4n");
     if (playBassEveryNote) {
@@ -105,33 +119,20 @@ function App() {
     wurli.triggerAttackRelease(scale[(scale.indexOf(bassNote) + 2) % scale.length] + "0", "8n"); // Play bass note a whole step above
   };
 
-  /* document.addEventListener("keydown", (e) => {
-    const dataKeys = document.querySelectorAll('[data-key]');
-
-    dataKeys.forEach(element => {
-      if (element.dataset.key === e.code) {
-        element.click();
-        element.addEventListener("animationend", function () {
-          element.classList.remove("clicked");
-        a});
-      }
-    });
-  }); */
-
   return (
     <div className="App">
       <div>
         <label htmlFor="scaleSelect">Select Scale: </label>
         <select id="scaleSelect" value={scaleType} onChange={handleChangeScale}>
           <option value="major">Major</option>
-          <option value="minor">Minor</option>
+          <option value="minor">Minor 7</option>
           {/* Add more scale types here */}
         </select>
       </div>
       <div>
         <label htmlFor="keySelect">Select Key: </label>
         <select id="keySelect" value={selectedKey} onChange={handleChangeKey}>
-          {scale.map((note) => (
+          {notes.map((note) => (
             <option key={note} value={note}>
               {note}
             </option>
@@ -157,7 +158,7 @@ function App() {
       <div className="synth">
         {scale.map((note, index) => (
           <button
-            key={note}
+            key={index}
             className={`piano-key${note.includes('#') ? ' black-key' : ' white-key'}`}
             data-key={`Key${note}`}
             onClick={(event) => playWurli(note, event)}
