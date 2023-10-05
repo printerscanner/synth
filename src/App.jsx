@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import * as Tone from 'tone';
-import './App.css';
 import wurli from './instruments/Wurli.jsx';
+import base from './instruments/Base.jsx';
 
-const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G","G#", "A", "A#", "B"];
+const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
+const scaleTypes = {
+  major: 'Major',
+  minor: 'Minor 7',
+  // Add more scale types here
+};
 
 function rotateArrayToPosition(arr, selectedItem) {
   const index = arr.indexOf(selectedItem);
@@ -33,11 +37,9 @@ function createScale(selectedKey, scaleType) {
 
   const scale = [];
   const rotatedArray = rotateArrayToPosition(notes, selectedKey);
-  console.log(rotatedArray)
   for (const interval of scaleIntervals[scaleType]) {
     scale.push(rotatedArray[interval]);
   }
-  console.log(scale)
   return scale;
 }
 
@@ -60,100 +62,112 @@ function createChord(baseNote, scaleType, addSeventh, addNinth, scale) {
       break;
     }
   }
-  console.log(generatedChord)
-
   return generatedChord;
 }
 
 function App() {
   const [scaleType, setScaleType] = useState('major');
-  const [selectedKey, setSelectedKey] = useState('C'); // Default key is 'C'
+  const [selectedKey, setSelectedKey] = useState('C');
   const [addSeventh, setAddSeventh] = useState(false);
   const [addNinth, setAddNinth] = useState(false);
-  const [playBassEveryNote, setPlayBassEveryNote] = useState(false); // State to control bass note playing
+  const [playBassEveryNote, setPlayBassEveryNote] = useState(false);
   const [scale, setScale] = useState(createScale(selectedKey, scaleType));
+
 
   useEffect(() => {
     setScale(createScale(selectedKey, scaleType));
   }, [selectedKey, scaleType]);
 
-  const handleChangeScale = (event) => {
-    setScaleType(event.target.value);
+  const handleChangeScale = (type) => {
+    setScaleType(type);
   };
 
-  const handleChangeKey = (event) => {
-    setSelectedKey(event.target.value);
+  const handleChangeKey = (key) => {
+    setSelectedKey(key);
   };
 
-  const handleChangeSeventh = (event) => {
-    setAddSeventh(event.target.checked);
+  const handleChangeSeventh = () => {
+    setAddSeventh(!addSeventh);
   };
 
-  const handleChangeNinth = (event) => {
-    setAddNinth(event.target.checked);
+  const handleChangeNinth = () => {
+    setAddNinth(!addNinth);
   };
 
-  const handleChangePlayBassEveryNote = (event) => {
-    setPlayBassEveryNote(event.target.checked);
+  const handleChangePlayBassEveryNote = () => {
+    setPlayBassEveryNote(!playBassEveryNote);
   };
 
-  const playBase = () => {
-    wurli.triggerAttackRelease(selectedKey + "1", "4n");
-    if (playBassEveryNote) {
-      playBassNote(selectedKey);
-    }
+  const playBase = (scale, position) => {
+    const baseNote = scale[position];
+    base.triggerAttackRelease(baseNote + "1", "1n");
+  };
+
+  const playBaseEveryNote = (baseNote) => {
+    wurli.triggerAttackRelease(baseNote + "1", "4n");
   };
 
   const playWurli = (note, event) => {
     if (event) {
       event.target.classList.add('clicked');
     }
-    wurli.triggerAttackRelease(createChord(note, scaleType, addSeventh, addNinth, scale), 1);
-    if (playBassEveryNote) {
-      playBassNote(note);
-    }
-  };
 
-  const playBassNote = (bassNote) => {
-    wurli.triggerAttackRelease(bassNote + "1", "4n");
-    wurli.triggerAttackRelease(scale[(scale.indexOf(bassNote) + 2) % scale.length] + "0", "8n"); // Play bass note a whole step above
+    const chord = createChord(note, scaleType, addSeventh, addNinth, scale);
+    wurli.triggerAttackRelease(chord, 1);
+    if (playBassEveryNote) {
+      playBaseEveryNote(note);
+    }
   };
 
   return (
     <div className="App">
       <div>
-        <label htmlFor="scaleSelect">Select Scale: </label>
-        <select id="scaleSelect" value={scaleType} onChange={handleChangeScale}>
-          <option value="major">Major</option>
-          <option value="minor">Minor 7</option>
-          {/* Add more scale types here */}
-        </select>
+        {Object.keys(scaleTypes).map((type) => (
+          <button
+            key={type}
+            className={`scale-button ${scaleType === type ? 'active' : ''}`}
+            onClick={() => handleChangeScale(type)}
+          >
+            {scaleTypes[type]}
+          </button>
+        ))}
       </div>
       <div>
-        <label htmlFor="keySelect">Select Key: </label>
-        <select id="keySelect" value={selectedKey} onChange={handleChangeKey}>
-          {notes.map((note) => (
-            <option key={note} value={note}>
-              {note}
-            </option>
-          ))}
-        </select>
+        {notes.map((note) => (
+          <button
+            key={note}
+            className={`key-button ${selectedKey === note ? 'active' : ''}`}
+            onClick={() => handleChangeKey(note)}
+          >
+            {note}
+          </button>
+        ))}
       </div>
       <div>
-        <label>
-          Add Seventh:
-          <input type="checkbox" checked={addSeventh} onChange={handleChangeSeventh} />
-        </label>
-        <label>
-          Add Ninth:
-          <input type="checkbox" checked={addNinth} onChange={handleChangeNinth} />
-        </label>
+        <button
+          className={`checkbox-button ${addSeventh ? 'active' : ''}`}
+          onClick={handleChangeSeventh}
+        >
+          + Seventh
+        </button>
+        <button
+          className={`checkbox-button ${addNinth ? 'active' : ''}`}
+          onClick={handleChangeNinth}
+        >
+          + Ninth
+        </button>
       </div>
       <div>
-        <label>
-          Play Bass with Every Note:
-          <input type="checkbox" checked={playBassEveryNote} onChange={handleChangePlayBassEveryNote} />
-        </label>
+        <button
+          className={`checkbox-button ${playBassEveryNote ? 'active' : ''}`}
+          onClick={handleChangePlayBassEveryNote}
+        >
+          + Bass with Every Note
+        </button>
+      </div>
+      <div className="bass-buttons">
+        <button onClick={() => playBase(scale, 2)}>Base 1</button>
+        <button onClick={() => playBase(scale, 6)}>Base 2</button>
       </div>
       <div className="synth">
         {scale.map((note, index) => (
@@ -166,10 +180,6 @@ function App() {
             {note}
           </button>
         ))}
-      </div>
-      <div className="bass-buttons">
-        <button onClick={() => playBase()}>Play Bass</button>
-        <button onClick={() => playBase(scale[(scale.indexOf(selectedKey) + 2) % scale.length])}>Play Bass (Whole Step Up)</button>
       </div>
     </div>
   );

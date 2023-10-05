@@ -1,160 +1,94 @@
+/* App.css */
+body {
+  background-color: #191919;
+  margin: 0;
+}
+
+/* Container */
 .App {
-  padding: 50px;
-}
-
-*:focus {
-  outline: none;
- }
-
-.synth-header {
-  background-color: orange;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 20px;
+  align-items: center;
+  justify-items: center;
+  background-color: #191919;
+  color: #fff;
   padding: 20px;
-  background-color: orange;
-  margin-bottom: 20px;
-  border-radius: 10px;
+  font-family: 'Courier New', Courier, monospace;
+  text-align: center;
 }
 
-.synth {
-  background: #f7f7f7;
-  padding: 30px;
-  border-radius: 10px;
+/* Settings Area */
+.settings-area {
+  grid-column: span 1;
   display: flex;
-  gap: 10px;
-  font-size: calc(10px + 2vmin);
-  color: white;
-  flex-wrap: wrap;
-  align-content: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
-.button--square {
+/* Scale Buttons */
+.scale-button,
+.key-button,
+.checkbox-button,
+.arpeggio-button {
+  grid-column: span 2; /* Full-width button */
+  background-color: #ff6600;
+  color: #191919;
+  border: none;
+  padding: 30px 60px;
+  margin: 8px;
   cursor: pointer;
-  width: 5vw;
-  height: 10vw;
-  border-radius: 20px;
-  box-shadow: inset 5px 5px 15px rgb(215 215 215 / 50%), inset -5px -5px 15px rgb(179 177 177 / 50%), 3px 3px 4px rgb(183 181 181 / 48%);
-  border: 1px solid #d4d4d4;
-  background-color: #dfdfdf;
-  transition: all .2s cubic-bezier(0.4, 0, 1, 1);
+  font-size: 20px;
+  border-radius: 15px;
+  transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0px 10px 20px rgba(255, 102, 0, 0.5);
 }
 
-
-.button--square-inner {
-  border-radius: 30px;
-  height: 95%;
-  display: block;
-  width: 95%;
-  background: #e9e9e9;
-  margin: auto;
-  position: relative;
-  /* filter: blur(0.6px); */
-  box-shadow: -9px 3px 10px 2px #f6f6f6, 13px 2px 11px 1px #a2a2a2;
-  transition: all .2s cubic-bezier(0.4, 0, 1, 1);
+.active {
+  background-color: #ffaa66;
+  transform: scale(1.1);
+  box-shadow: 0px 15px 30px rgba(255, 102, 0, 0.7);
 }
 
-.button--black .button--square-inner {
-  background-color: #474747;
-}
-
-.button--square-inner:hover {
-  transform: scale(.98);
-}
-
-.button--square-inner:active {
-  transform: scale(.93);
-}
-
-.button--circle {
+/* Piano Key Buttons */
+.piano-key {
+  grid-column: span 2; /* Full-width button */
+  background-color: #303030;
+  color: #ff6600;
+  border: none;
+  padding: 30px 60px;
+  margin: 8px;
   cursor: pointer;
-  width: 10vw;
-  height: 10vw;
-  border-radius: 50%;
-  box-shadow: inset 8px 8px 20px rgb(255 255 255 / 30%), inset -5px -5px 15px rgb(0 0 0 / 50%), 3px 3px 4px rgb(79 79 79 / 75%);
-  border: 1px solid #7f6e6e;
-  background-color: #323131;
-  transition: all .2s cubic-bezier(0.4, 0, 1, 1);
+  font-size: 20px;
+  border-radius: 15px;
+  transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0px 10px 20px rgba(255, 102, 0, 0.5);
 }
 
-.button--circle:active,
-.button--circle.clicked {
-  animation-name: buttonCircleFade;
-  animation-duration: .2s;
-  animation-timing-function: ease-in-out;
+.piano-key.active {
+  background-color: #ff6600;
+  color: #191919;
+  transform: scale(1.1);
+  box-shadow: 0px 15px 30px rgba(255, 102, 0, 0.7);
 }
 
-.button--circle:hover {
-  transform: scale(.98);
-}
-
-@keyframes buttonCircleFade {
-  0% {
-    transform: scale(.98);
-    box-shadow: inset 8px 8px 20px rgb(255 255 255 / 30%), inset -5px -5px 15px rgb(0 0 0 / 50%), 3px 3px 4px rgb(79 79 79 / 75%);
-  }
-  35% {
-    transform: scale(.96);
-    box-shadow: inset 5px 5px 15px rgba(73, 73, 73, 0.7), inset -5px -5px 15px rgb(96 94 94 / 10%), 3px 3px 4px rgb(29 29 29 / 18%);
-  }
-  100% {
-    transform: scale(.98);
-    box-shadow: inset 8px 8px 20px rgb(255 255 255 / 30%), inset -5px -5px 15px rgb(0 0 0 / 50%), 3px 3px 4px rgb(79 79 79 / 75%);
-  }
-}
-
-
-.button--small {
+/* Bass Buttons */
+.bass-buttons button {
+  grid-column: span 1;
+  background-color: #303030;
+  color: #ff6600;
+  border: none;
+  padding: 30px 60px;
+  margin: 8px;
   cursor: pointer;
-  width: 10vw;
-  height: 10vw;
-  border-radius: 50%;
-  box-shadow: inset 5px 5px 15px rgb(215 215 215 / 50%), inset -5px -5px 15px rgb(179 177 177 / 50%), 3px 3px 4px rgb(183 181 181 / 48%);
-  border: 1px solid #d4d4d4;
-  background-color: #dfdfdf;
-  transition: all .2s cubic-bezier(0.4, 0, 1, 1);
+  font-size: 20px;
+  border-radius: 15px;
+  transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+  box-shadow: 0px 10px 20px rgba(255, 102, 0, 0.5);
 }
 
-.button--small:hover {
-  transform: scale(1);
-}
-
-.button--small-inner {
-  border-radius: 40px;
-  height: 7vw;
-  display: block;
-  width: 7vw;
-  background: #e9e9e9;
-  margin: auto;
-  position: relative;
-  filter: blur(0.6px);
-  box-shadow: -9px 3px 10px 2px #f6f6f6, 13px 2px 11px 1px #a2a2a2;
-  transition: all .2s cubic-bezier(0.4, 0, 1, 1);
-}
-
-
-.button--small-inner:hover {
-  transform: scale(.98);
-}
-
-.button--small-inner:active {
-  transform: scale(.93);
-}
-
-.button--square.clicked > .button--square-inner,
-.button--small.clicked > .button--small-inner {
-  animation-name: fadeIn;
-  animation-duration: .2s;
-  animation-timing-function: ease-in-out;
-}
-
-
-@keyframes fadeIn {
-  0% {
-    transform: scale(1);
-  }
-  20% {
-    transform: scale(.90);
-  }
-  100% {
-      transform: scale(1);
-  }
+.bass-buttons button:hover {
+  background-color: #ff6600;
+  transform: scale(1.1);
+  box-shadow: 0px 15px 30px rgba(255, 102, 0, 0.7);
 }
