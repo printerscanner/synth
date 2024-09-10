@@ -16,7 +16,7 @@ const base = new Tone.Sampler({
     G1: "G1.wav",
     "Ab1": "Gs1.wav",
   },
-  baseUrl: "../synth/audio/heavy_base/",
+  baseUrl: "../audio/heavy_base/",
   onload: () => {}
 }).toDestination();
 
