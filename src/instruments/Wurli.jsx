@@ -45,7 +45,7 @@ const wurli = new Tone.Sampler({
     "Ab2": "Gs2.wav",
     "Ab3": "Gs3.wav",
   },
-  baseUrl: "../synth/audio/wurli/",
+  baseUrl: "../audio/wurli/",
   onload: () => {
   }
 }).toDestination();
