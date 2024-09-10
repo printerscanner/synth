@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import wurli from './instruments/Wurli.jsx';
-import base from './instruments/Base.jsx';
 
 const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
@@ -12,21 +11,12 @@ const scaleTypes = {
 
 function rotateArrayToPosition(arr, selectedItem) {
   const index = arr.indexOf(selectedItem);
-
-  if (index === -1) {
-    // Item not found in the array
+  if (index === -1 || index === 0) {
     return arr;
   }
-
-  if (index === 0) {
-    // Item not found in the array
-    return arr;
-  }
-
   const firstPart = arr.slice(0, index);
   const secondPart = arr.slice(index);
-  const rotatedArray = secondPart.concat(firstPart);
-  return rotatedArray;
+  return secondPart.concat(firstPart);
 }
 
 function createScale(selectedKey, scaleType) {
@@ -34,7 +24,6 @@ function createScale(selectedKey, scaleType) {
     major: [0, 2, 4, 5, 7, 9, 11],
     minor: [0, 2, 3, 5, 7, 9, 10],
   };
-
   const scale = [];
   const rotatedArray = rotateArrayToPosition(notes, selectedKey);
   for (const interval of scaleIntervals[scaleType]) {
@@ -45,11 +34,10 @@ function createScale(selectedKey, scaleType) {
 
 function createChord(baseNote, scaleType, addSeventh, addNinth, scale) {
   const intervals = [0, 2, 4]; // Default intervals for major and minor chords
-  if (addSeventh) intervals.push(6); // Add seventh (default to major seventh)
+  if (addSeventh) intervals.push(6); // Add seventh
   if (addNinth) intervals.push(1); // Add ninth
 
   const generatedChord = [];
-
   for (let index = 0; index < scale.length; index++) {
     if (scale[index] === baseNote) {
       for (const interval of intervals) {
@@ -72,11 +60,51 @@ function App() {
   const [addNinth, setAddNinth] = useState(false);
   const [playBassEveryNote, setPlayBassEveryNote] = useState(false);
   const [scale, setScale] = useState(createScale(selectedKey, scaleType));
+  const [audioContext, setAudioContext] = useState(null); // AudioContext state
 
+  // Define playWurli function before useEffect
+  const playWurli = (note, event) => {
+    if (event) {
+      event.target.classList.add('clicked');
+    }
+
+    // Resume AudioContext on user interaction (button click)
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume().then(() => {
+        console.log("AudioContext resumed after user interaction.");
+      });
+    }
+
+    const chord = createChord(note, scaleType, addSeventh, addNinth, scale);
+    wurli.triggerAttackRelease(chord, 1);
+    if (playBassEveryNote) {
+      playBaseEveryNote(note);
+    }
+  };
 
   useEffect(() => {
+    // Create an AudioContext on initial render
+    const context = new (window.AudioContext || window.webkitAudioContext)();
+    setAudioContext(context);
+
     setScale(createScale(selectedKey, scaleType));
   }, [selectedKey, scaleType]);
+
+  useEffect(() => {
+    const keyMappings = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k'];
+
+    const handleKeyDown = (event) => {
+      const keyIndex = keyMappings.indexOf(event.key);
+      if (keyIndex !== -1 && scale[keyIndex]) {
+        playWurli(scale[keyIndex]);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [scale]);
 
   const handleChangeScale = (type) => {
     setScaleType(type);
@@ -98,30 +126,14 @@ function App() {
     setPlayBassEveryNote(!playBassEveryNote);
   };
 
-  const playBase = (scale, position) => {
-    const baseNote = scale[position];
-    base.triggerAttackRelease(baseNote + "1", "1n");
-  };
-
   const playBaseEveryNote = (baseNote) => {
     wurli.triggerAttackRelease(baseNote + "1", "4n");
   };
 
-  const playWurli = (note, event) => {
-    if (event) {
-      event.target.classList.add('clicked');
-    }
-
-    const chord = createChord(note, scaleType, addSeventh, addNinth, scale);
-    wurli.triggerAttackRelease(chord, 1);
-    if (playBassEveryNote) {
-      playBaseEveryNote(note);
-    }
-  };
-
   return (
     <div className="App">
-      <div>
+      <img className="logo" src="public/synth.svg" alt="" />
+      <header>
         {Object.keys(scaleTypes).map((type) => (
           <button
             key={type}
@@ -131,19 +143,21 @@ function App() {
             {scaleTypes[type]}
           </button>
         ))}
-      </div>
-      <div>
-        {notes.map((note) => (
-          <button
-            key={note}
-            className={`key-button ${selectedKey === note ? 'active' : ''}`}
-            onClick={() => handleChangeKey(note)}
+        <div style={{ width: "20%" }}>
+          <select
+            value={selectedKey}
+            onChange={(e) => handleChangeKey(e.target.value)}
+            className="key-dropdown"
+            placeholder="Key"
           >
-            {note}
-          </button>
-        ))}
-      </div>
-      <div>
+            {notes.map((note) => (
+              <option key={note} value={note}>
+                {note}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button
           className={`checkbox-button ${addSeventh ? 'active' : ''}`}
           onClick={handleChangeSeventh}
@@ -156,31 +170,29 @@ function App() {
         >
           + Ninth
         </button>
-      </div>
-      <div>
+
         <button
           className={`checkbox-button ${playBassEveryNote ? 'active' : ''}`}
           onClick={handleChangePlayBassEveryNote}
         >
-          + Bass with Every Note
+          + Bass
         </button>
-      </div>
-      <div className="bass-buttons">
-        <button onClick={() => playBase(scale, 2)}>Base 1</button>
-        <button onClick={() => playBase(scale, 6)}>Base 2</button>
-      </div>
+      </header>
+
       <div className="synth">
         {scale.map((note, index) => (
           <button
             key={index}
-            className={`piano-key${note.includes('#') ? ' black-key' : ' white-key'}`}
+            className="piano-key"
             data-key={`Key${note}`}
             onClick={(event) => playWurli(note, event)}
-          >
-            {note}
-          </button>
+          ></button>
         ))}
+        
       </div>
+      <footer>
+        Under construction. By <a href="https://printerscanner.net">PS Studio</a>. Fork it on <a href="https://github.com/printerscanner/synth">Github</a>.
+      </footer>
     </div>
   );
 }
