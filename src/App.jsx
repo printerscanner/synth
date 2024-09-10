@@ -132,7 +132,7 @@ function App() {
 
   return (
     <div className="App">
-      <img className="logo" src="public/synth.svg" alt="" />
+      <img className="logo" src="synth.svg" alt="logo" />
       <header>
         {Object.keys(scaleTypes).map((type) => (
           <button
